@@ -14,6 +14,9 @@ extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
 uint ticks;
 
+// hw3
+int mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm);
+
 void
 tvinit(void)
 {
@@ -39,7 +42,7 @@ trap(struct trapframe *tf)
   if(tf->trapno == T_SYSCALL){
     if(myproc()->killed)
       exit();
-    myproc()->tf = tf;
+    myproc()->tf = tf;  // attach tf to the current process -- so syscall() can get call # and arguments
     syscall();
     if(myproc()->killed)
       exit();
@@ -85,6 +88,16 @@ trap(struct trapframe *tf)
       cprintf("unexpected trap %d from cpu %d eip %x (cr2=0x%x)\n",
               tf->trapno, cpuid(), tf->eip, rcr2());
       panic("trap");
+    }
+    // hw3
+    if (tf->trapno == T_PGFLT) {
+      char* mem;
+      uint a = PGROUNDDOWN(rcr2());
+      mem = kalloc(); // allocate a page of PM and store in MEM.
+      memset(mem, 0, PGSIZE); // initialize.
+      // map the physical page to corresponding VM address.
+      mappages(myproc()->pgdir, (char*)a, PGSIZE, V2P(mem), PTE_W|PTE_U);
+      break;
     }
     // In user space, assume process misbehaved.
     cprintf("pid %d %s: trap %d err %d on cpu %d "

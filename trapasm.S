@@ -16,7 +16,7 @@ alltraps:
   movw %ax, %es
 
   # Call trap(tf), where tf=%esp
-  pushl %esp
+  pushl %esp  # %esp points to the (bottom of the) trapframe, which is the argument for trap() in trap.c
   call trap
   addl $4, %esp
 
