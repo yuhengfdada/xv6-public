@@ -51,6 +51,27 @@ trap(struct trapframe *tf)
 
   switch(tf->trapno){
   case T_IRQ0 + IRQ_TIMER:
+    // hw4
+    if(myproc() != 0 && (tf->cs & 3) == 3) {
+      if (myproc()->alarmticks != 0) {
+        if (--myproc()->alarmleft == 0) {
+          myproc()->tf = tf;
+          myproc()->alarmleft = myproc()->alarmticks;
+          // 显然不能直接调用，现在在kernel space
+          /* Debug 
+          void (*alarmhandler)() = myproc()->alarmhandler;
+          int a = 1;
+          a++;
+          alarmhandler();
+          */
+         
+          tf->esp -= 4;  // push handler's return address
+          *(uint *)(tf->esp) = tf->eip; // push handler's return address
+          tf->eip = (uint)myproc()->alarmhandler; // let the trap return to handler
+        
+        }
+      }
+    }
     if(cpuid() == 0){
       acquire(&tickslock);
       ticks++;
@@ -58,6 +79,7 @@ trap(struct trapframe *tf)
       release(&tickslock);
     }
     lapiceoi();
+
     break;
   case T_IRQ0 + IRQ_IDE:
     ideintr();
