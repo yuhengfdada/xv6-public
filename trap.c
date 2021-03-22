@@ -57,7 +57,7 @@ trap(struct trapframe *tf)
         if (--myproc()->alarmleft == 0) {
           myproc()->tf = tf;
           myproc()->alarmleft = myproc()->alarmticks;
-          // 显然不能直接调用，现在在kernel space
+          // 直接调用会有意想不到的后果...
           /* Debug 
           void (*alarmhandler)() = myproc()->alarmhandler;
           int a = 1;

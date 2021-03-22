@@ -17,6 +17,5 @@ main(int argc, char *argv[])
 void
 periodic()
 {
-    //printf(1, "alarm!\n");
-    sleep(10);
+    printf(1, "alarm!\n");
 }

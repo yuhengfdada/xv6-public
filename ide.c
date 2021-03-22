@@ -100,6 +100,7 @@ idestart(struct buf *b)
 }
 
 // Interrupt handler.
+// Interrupt arrives when the current job is done: which is the front of IDEQUEUE!
 void
 ideintr(void)
 {
@@ -147,22 +148,22 @@ iderw(struct buf *b)
     panic("iderw: ide disk 1 not present");
 
   acquire(&idelock);  //DOC:acquire-lock
-
+  sti(); // hw6
   // Append b to idequeue.
   b->qnext = 0;
   for(pp=&idequeue; *pp; pp=&(*pp)->qnext)  //DOC:insert-queue
     ;
   *pp = b;
 
-  // Start disk if necessary.
+  // Start disk if necessary (when previous queue is empty, i.e. the current buffer is at the front).
   if(idequeue == b)
     idestart(b);
 
   // Wait for request to finish.
   while((b->flags & (B_VALID|B_DIRTY)) != B_VALID){
-    sleep(b, &idelock);
+    sleep(b, &idelock); // Atomically release lock and sleep on chan. Reacquires lock when awakened.
   }
 
-
+  cli(); // hw6
   release(&idelock);
 }

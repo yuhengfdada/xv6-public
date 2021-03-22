@@ -29,6 +29,7 @@ acquire(struct spinlock *lk)
     panic("acquire");
 
   // The xchg is atomic.
+  // If locked, xchg returns 1; otherwise returns 0
   while(xchg(&lk->locked, 1) != 0)
     ;
 
@@ -108,7 +109,7 @@ pushcli(void)
 
   eflags = readeflags();
   cli();
-  if(mycpu()->ncli == 0)
+  if(mycpu()->ncli == 0) // if there was no cli() before, save the interrupt status.
     mycpu()->intena = eflags & FL_IF;
   mycpu()->ncli += 1;
 }
@@ -120,7 +121,7 @@ popcli(void)
     panic("popcli - interruptible");
   if(--mycpu()->ncli < 0)
     panic("popcli");
-  if(mycpu()->ncli == 0 && mycpu()->intena)
+  if(mycpu()->ncli == 0 && mycpu()->intena) // restore the interrupt status before.
     sti();
 }
 

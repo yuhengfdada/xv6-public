@@ -19,7 +19,7 @@ fetchint(uint addr, int *ip)
 {
   struct proc *curproc = myproc();
 
-  if(addr >= curproc->sz || addr+4 > curproc->sz)
+  if(addr >= curproc->sz || addr+4 > curproc->sz) // check that addr lies in user address space.
     return -1;
   *ip = *(int*)(addr);
   return 0;
