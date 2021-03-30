@@ -132,6 +132,7 @@ static int (*syscalls[])(void) = {
 [SYS_alarm]   sys_alarm,
 };
 
+
 /*
 static char* syscall_names[] = {
 [SYS_fork]    "fork",

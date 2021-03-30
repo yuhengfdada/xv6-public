@@ -27,7 +27,7 @@
 #include "buf.h"
 
 struct {
-  struct spinlock lock;
+  struct spinlock lock;  // 整个bcache的大锁。whenever想修改bcache的时候都要上锁。
   struct buf buf[NBUF];
 
   // Linked list of all buffers, through prev/next.
@@ -70,7 +70,7 @@ bget(uint dev, uint blockno)
     if(b->dev == dev && b->blockno == blockno){
       b->refcnt++;
       release(&bcache.lock);
-      acquiresleep(&b->lock);
+      acquiresleep(&b->lock);  // return LOCKED buffer to make sure the caller sees it unmodified
       return b;
     }
   }
@@ -99,6 +99,7 @@ bread(uint dev, uint blockno)
   struct buf *b;
 
   b = bget(dev, blockno);
+  // if b is not in bcache, read it from disk.
   if((b->flags & B_VALID) == 0) {
     iderw(b);
   }
